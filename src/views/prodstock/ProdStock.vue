@@ -195,6 +195,7 @@ export default {
     handleFormCancel() {
       this.formDrawerOpen = false;
       this.currentEditRecord = null;
+      this.detailtableData = [];
     },
 
     formatValue(value, type) {

@@ -51,13 +51,13 @@ apiClient.interceptors.response.use(
             router?.push('/Login').catch(() => {
             });
         } else if (status === 400) {
-            errorMsg = data?.message || '请求参数错误';
+            errorMsg = data?.message || data?.msg || '请求参数错误';
         } else if (status === 403) {
             errorMsg = '无权限访问';
         } else if (status === 404) {
             errorMsg = '接口不存在';
         } else if (status === 500) {
-            errorMsg = data?.message || '服务器内部错误';
+            errorMsg = data?.message || data?.msg || '服务器内部错误';
         } else if (error.code === 'ECONNABORTED') {
             errorMsg = '请求超时';
         } else if (!error.response) {
