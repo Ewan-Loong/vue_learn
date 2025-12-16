@@ -6,7 +6,7 @@
         {{ currentUser.name }}
       </a-avatar>
       <a-tag color="blue">
-        超级管理员
+        {{ currentUser.rname + '(' + currentUser.rcode + ')' }}
       </a-tag>
     </div>
 
@@ -26,11 +26,11 @@
 import {h} from 'vue';
 import {
   HomeOutlined,
-  MenuOutlined,
-  UserOutlined,
-  SettingOutlined,
+  InboxOutlined,
   LogoutOutlined,
-  InboxOutlined
+  MenuOutlined,
+  SettingOutlined,
+  UserOutlined
 } from '@ant-design/icons-vue';
 
 export default {
@@ -54,25 +54,14 @@ export default {
           icon: MenuOutlined,
           children: [
             {label: '系统列表', key: 'SystemList'},
-            {label: '添加系统', key: 'system_add'},
-            {label: '修改系统', key: 'system_edit'},
+            {label: '角色管理', key: 'RoleList'},
+            {label: '权限管理', key: 'PermissionList'},
           ],
         },
         {
           label: '用户管理',
-          key: 'User',
-          icon: UserOutlined,
-          children: [
-            {label: '用户列表', key: 'UserList'},
-            {label: '新增用户', key: 'UserAdd'},
-            {
-              label: '修改用户', key: 'UserUpdate',
-              children: [
-                {label: 'Option 1', key: 'e_user1'},
-                {label: 'Option 2', key: 'e_user2'},
-              ],
-            },
-          ],
+          key: 'UserList',
+          icon: UserOutlined
         },
         {
           label: '产品管理',

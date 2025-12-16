@@ -39,7 +39,7 @@
     <!-- 详情抽屉 -->
     <DrawerDesc
         v-model:open="detailDrawerOpen"
-        :title="`用户详情 - ${currentEditRecord?.uid}`"
+        :title="`用户详情 - ${currentEditRecord?.name}`"
         :form-items="formItemsForDrawer"
         :record="currentEditRecord"
         @cancel="handleCancelDetail"
@@ -49,7 +49,7 @@
     <!-- 编辑/新增抽屉表单 -->
     <DrawerForm
         v-model:open="formDrawerOpen"
-        :title="`用户 - ${currentEditRecord ? currentEditRecord.uid : ''}`"
+        :title="`用户 ${currentEditRecord ? currentEditRecord.name+' ' : ''}`"
         :form-items="formItemsForDrawer"
         :initial-values="initialValuesForDrawer"
         :submitting="saving"
@@ -81,6 +81,9 @@ export default {
       columns: [
         {title: '用户ID', dataIndex: 'uid', key: 'uid', type: 'number', showInAdd: false, editable: false},
         {title: '用户名', dataIndex: 'name', key: 'name', rules: [stringLength({max: 20})]},
+        {title: '角色ID', dataIndex: 'rid', key: 'rid', type: 'select'},
+        {title: '角色编码', dataIndex: 'rcode', key: 'rcode', showInAdd: false, showInEdit: false},
+        {title: '角色名', dataIndex: 'rname', key: 'rname', showInAdd: false, showInEdit: false},
         {title: '出生年月', dataIndex: 'birthdt', key: 'birthdt', type: 'date'},
         {title: '密码', dataIndex: 'passwd', key: 'passwd', type: 'password', rules: [passwordComplexity()]},
         {
@@ -90,7 +93,7 @@ export default {
           key: 'on_line',
           type: 'number',
           showInAdd: false,
-          editable: false
+          showInEdit: false
         },
         {
           title: '操作',
