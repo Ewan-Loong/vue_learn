@@ -1,4 +1,4 @@
-import {createWebHistory, createRouter} from 'vue-router'
+import {createRouter, createWebHistory} from 'vue-router'
 
 export const loginRouter = {
     path: '/',
@@ -28,7 +28,9 @@ export const rootRouter = {
     component: () => import('@/views/HomeIndex.vue'),
     children: [
         {name: 'Index', path: 'Index', component: () => import('@/views/temp.vue')},
-        {name: 'SystemList', path: 'SystemList', component: () => import('@/views/SystemList.vue')},
+        {name: 'SystemList', path: 'SystemList', component: () => import('@/views/system/SystemList.vue')},
+        {name: 'RoleList', path: 'RoleList', component: () => import('@/views/system/RoleList.vue')},
+        {name: 'PermissionList', path: 'PermissionList', component: () => import('@/views/system/PermissionList.vue')},
         {name: 'UserList', path: 'UserList', component: () => import('@/views/user/UserList.vue')},
         {name: 'ProdList', path: 'ProdList', component: () => import('@/views/prod/ProdList.vue')},
         {name: 'ProdTag', path: 'ProdTag', component: () => import('@/views/prodtag/ProdTag.vue')},
@@ -45,7 +47,7 @@ export const Test = {
 export const NotFoundRouter = {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
-    component: () => import('@/views/NotFound.vue'),
+    component: () => import('@/views/system/NotFound.vue'),
 }
 
 // 定义的路由都放在该常量中

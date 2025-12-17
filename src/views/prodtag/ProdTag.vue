@@ -4,7 +4,7 @@
       <a-row :gutter="24" class="main-content">
         <!-- 左侧树 -->
         <a-col :span="16">
-          <a-spin :spinning="treeLoading" class="">
+          <a-skeleton :loading="treeLoading" active >
             <a-tree
                 :tree-data="treeData"
                 :selected-keys="selectedKeys"
@@ -32,7 +32,7 @@
                 </div>
               </template>
             </a-tree>
-          </a-spin>
+          </a-skeleton>
         </a-col>
 
         <!-- 右侧说明 -->

@@ -36,6 +36,15 @@ export const passwordComplexity = (message = '密码必须包含大写字母、�
     };
 };
 
+export const customRegExp = (regexp,message) => {
+    return (_, value) => {
+        if (!value) return Promise.resolve();
+        return regexp.test(value)
+            ? Promise.resolve()
+            : Promise.reject(new Error(message));
+    };
+};
+
 // 2. 字符长度限制 [min, max]
 export const stringLength = ({min = 0, max = Infinity, message}) => {
     return (_, value) => {

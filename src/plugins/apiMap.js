@@ -7,6 +7,15 @@ export const apiMap = {
     UserAdd: {method: 'POST', path: '/UserAuth/create_user'},
     UserUpdate: {method: 'POST', path: '/UserAuth/update_user'},
     UserDelete: {method: 'POST', path: '/UserAuth/delete_user'},
+    // RolePermission
+    RoleQuery: {method: 'GET', path: '/RolePermission/select_role'},
+    RoleAdd: {method: 'POST', path: '/RolePermission/create_role'},
+    RoleUpdate: {method: 'POST', path: '/RolePermission/update_role'},
+    RoleDelete: {method: 'POST', path: '/RolePermission/delete_role'},
+    PermissionQuery: {method: 'POST', path: '/RolePermission/select_permission'},
+    PermissionAdd: {method: 'POST', path: '/RolePermission/create_permission'},
+    PermissionUpdate: {method: 'POST', path: '/RolePermission/update_permission'},
+    PermissionDelete: {method: 'POST', path: '/RolePermission/delete_permission'},
     // ProdManage
     ProdQuery: {method: 'POST', path: '/ProdManage/select_prod'},
     ProdAdd: {method: 'POST', path: '/ProdManage/create_prod'},
@@ -26,8 +35,8 @@ export const apiMap = {
     StockOut: {method: 'POST', path: '/ProdManage/stock_out'},
     StockCancel: {method: 'POST', path: '/ProdManage/stock_cancel'},
     StockLogQuery: {method: 'GET', path: '/ProdManage/select_stock_log'},
-
-    UploadFile:{method: 'POST', path: '/FileHandle/upload_file'},
-    ParseFile:{method: 'POST', path: '/FileHandle/parse_file'},
-    DownloadFile:{method: 'GET', path: '/FileHandle/download/{filename}'},
+    // FileHandle
+    UploadFile: {method: 'POST', path: '/FileHandle/upload_file'},
+    ParseFile: {method: 'POST', path: '/FileHandle/parse_file'},
+    DownloadFile: {method: 'GET', path: '/FileHandle/download/{filename}'},
 };

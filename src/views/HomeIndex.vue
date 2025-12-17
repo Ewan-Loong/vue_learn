@@ -37,9 +37,9 @@
 </template>
 
 <script>
-import ColorPicker from "@/components/ColorPicker";
-import {MenuUnfoldOutlined, MenuFoldOutlined} from '@ant-design/icons-vue';
-import MenuBar from '@/components/layout/MenuBar';
+import ColorPicker from "@/components/ColorPicker.vue";
+import {MenuFoldOutlined, MenuUnfoldOutlined} from '@ant-design/icons-vue';
+import MenuBar from '@/components/layout/MenuBar.vue';
 import zhCN from 'ant-design-vue/es/locale/zh_CN';
 
 export default {
