@@ -3,7 +3,7 @@ export const apiMap = {
     RefToken: {method: 'GET', path: '/UserAuth/refresh_token'},
     UserLogin: {method: 'POST', path: '/UserAuth/login'},
     UserLogout: {method: 'POST', path: '/UserAuth/logout'},
-    UserQuery: {method: 'POST', path: '/UserAuth/select_user'},
+    UserQuery: {method: 'POST', path: '/UserAuth/select_user',},
     UserAdd: {method: 'POST', path: '/UserAuth/create_user'},
     UserUpdate: {method: 'POST', path: '/UserAuth/update_user'},
     UserDelete: {method: 'POST', path: '/UserAuth/delete_user'},

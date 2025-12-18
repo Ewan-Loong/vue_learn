@@ -68,7 +68,9 @@ export default {
 
       // 选择类型
       if (['select', 'radio', 'checkbox', 'tree'].includes(item.type) && item.options) {
-        if (item.type === 'select' || item.type === 'radio') {
+        if (item.original)
+          return value
+        else if (item.type === 'select' || item.type === 'radio') {
           const option = item.options.find(opt => this.getNodeValue(opt, item) === value);
           return option ? this.getNodeLabel(option, item) : value;
         } else if (item.type === 'checkbox') {

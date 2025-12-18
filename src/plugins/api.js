@@ -48,8 +48,7 @@ apiClient.interceptors.response.use(
 
         if (status === 401) {
             localStorage.removeItem('token');
-            router?.push('/Login').catch(() => {
-            });
+            errorMsg = data?.message || data?.msg || '会话过期,请重新登录'
         } else if (status === 400) {
             errorMsg = data?.message || data?.msg || '请求参数错误';
         } else if (status === 403) {
@@ -64,6 +63,8 @@ apiClient.interceptors.response.use(
             errorMsg = '网络连接失败，请检查网络';
         }
         message?.error(errorMsg);
+        // toke过期跳转
+        if (status === 401) router?.push('/Login').catch(() => {});
 
         return Promise.reject(error);
     }

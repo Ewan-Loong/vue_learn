@@ -81,7 +81,7 @@ export default {
       columns: [
         {title: '用户ID', dataIndex: 'uid', key: 'uid', type: 'number', showInAdd: false, editable: false},
         {title: '用户名', dataIndex: 'name', key: 'name', rules: [stringLength({max: 20})]},
-        {title: '角色ID', dataIndex: 'rid', key: 'rid', type: 'select'},
+        {title: '角色ID', dataIndex: 'rid', key: 'rid', type: 'select', options: [], original: true},
         {title: '角色编码', dataIndex: 'rcode', key: 'rcode', showInAdd: false, showInEdit: false},
         {title: '角色名', dataIndex: 'rname', key: 'rname', showInAdd: false, showInEdit: false},
         {title: '出生年月', dataIndex: 'birthdt', key: 'birthdt', type: 'date'},
@@ -128,7 +128,14 @@ export default {
         // return values;
         return {}
       } else {
-        return {...this.currentEditRecord};
+        // 调整编辑模式下的初始化数据
+        const init = Object.keys(this.currentEditRecord)
+            .filter(key => !['rcode', 'rname', 'passwd'].includes(key))
+            .reduce((i, key) => {
+              i[key] = this.currentEditRecord[key]
+              return i
+            }, {})
+        return init;
       }
     }
   },
@@ -138,6 +145,12 @@ export default {
       try {
         const response = await this.$api.post('UserQuery');
         this.tableData = response.data;
+        await this.$api.get('RoleQuery').then(response => {
+          this.columns[2].options = response.data.map(item => ({
+            value: item.rid,
+            label: item.rcode + '-' + item.rname
+          }))
+        })
       } catch (error) {
         console.error('refreshData failed:', error);
         this.$message.error('数据加载失败');
@@ -205,7 +218,7 @@ export default {
         cancelText: '取消',
         onOk: async () => {
           try {
-            await this.$api.request(deleteApi, {...record});
+            await this.$api.request(deleteApi, {uid: record.uid, name: record.name});
             this.$message.success('删除成功');
             this.refreshData();
           } catch (error) {
