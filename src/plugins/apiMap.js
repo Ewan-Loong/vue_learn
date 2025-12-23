@@ -16,6 +16,9 @@ export const apiMap = {
     PermissionAdd: {method: 'POST', path: '/RolePermission/create_permission'},
     PermissionUpdate: {method: 'POST', path: '/RolePermission/update_permission'},
     PermissionDelete: {method: 'POST', path: '/RolePermission/delete_permission'},
+    RolePermissionQuery: {method: 'POST', path: '/RolePermission/select_role_permission'},
+    RolePermissionAdd: {method: 'POST', path: '/RolePermission/add_role_permission'},
+    RolePermissionDelete: {method: 'POST', path: '/RolePermission/delete_role_permission'},
     // ProdManage
     ProdQuery: {method: 'POST', path: '/ProdManage/select_prod'},
     ProdAdd: {method: 'POST', path: '/ProdManage/create_prod'},

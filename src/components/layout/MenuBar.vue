@@ -47,6 +47,7 @@ export default {
           label: '首页',
           key: 'Index',
           icon: HomeOutlined,
+          no_permission: true,
         },
         {
           label: '系统管理',
@@ -78,15 +79,16 @@ export default {
           key: 'other',
           icon: SettingOutlined,
           children: [
-            {label: 'Option 1', key: 'other 1'},
-            {label: 'Option 2', key: 'other 2'},
-            {label: 'Option 3', key: 'other 3'},
+            {label: 'Option 1', key: 'other1'},
+            {label: 'Option 2', key: 'other2'},
+            {label: 'Option 3', key: 'other3'},
           ],
         },
         {
           label: '退出',
           key: 'Logout',
           icon: LogoutOutlined,
+          no_permission: true,
         },
       ],
     };
@@ -94,7 +96,7 @@ export default {
   async mounted() {
     // 模拟：从 store / API / props 获取当前用户权限
     // 实际项目中，可能来自 this.$store.state.user.permissions 或 route meta 等
-    const userPermissions = this.getUserPermissions(); // 返回 string[]，如 ['1', '2', '5', '7']
+    const userPermissions = await this.getUserPermissions(); // 返回 string[]，如 ['1', '2', '5', '7']
 
     // 转为 Set 提升查找效率
     const allowedKeys = new Set(userPermissions);
@@ -105,59 +107,113 @@ export default {
     // 过滤菜单
     this.items = this.filterMenuByPermission(this.fullMenuConfig, allowedKeys);
 
-    // 默认展开第一个有权限的根菜单（可选）
-    // const firstRootWithPermission = this.items.find(item => item.children)?.key;
-    // if (firstRootWithPermission) {
-    //   this.openKeys = [firstRootWithPermission];
-    // }
-
     // 初始化 selectedKeys 为当前路由的 key
     this.selectedKeys = [this.$route.name];
   },
 
   methods: {
-    // 模拟获取用户权限（实际应替换为真实逻辑）
-    getUserPermissions() {
-      // 示例：假设登录用户有权限访问这些菜单项
-      return ['*'];
-      // return this.$store.getters['user/permissions']; // Vuex 示例
-      // return this.$route.meta.permissions; // 路由级权限示例
-    },
-    getItem(label, key, icon = null, children = [], type = undefined) {
-      return {
-        key,
-        icon,
-        children: children.length > 0 ? children : undefined,
-        label,
-        type,
+    async getUserPermissions() {
+      try {
+        // 从本地获取用户权限
+        let rolePermission = JSON.parse(localStorage.getItem('role_permission'))
+
+        if (!rolePermission) {
+          // 若无 则从API获取当前登录用户权限
+          const response = await this.$api.post('RolePermissionQuery', {'role_id': this.currentUser?.rid})
+          rolePermission = response.data
+          localStorage.setItem('role_permission', JSON.stringify(rolePermission))
+        }
+
+        // 返回权限代码数组
+        return Array.isArray(rolePermission)
+            ? rolePermission.filter(i => i.category === 'menu').map(i => String(i.code)) : []
+      } catch (error) {
+        console.error('获取用户权限失败:', error);
+        return [];
       }
     },
-    filterMenuByPermission(menuItems, allowedKeys) {
+
+    getItem(label, key, icon = null, children = [], type = undefined) {
+      return {key, icon, children: children.length > 0 ? children : undefined, label, type,}
+    },
+
+    filterMenuByPermission(menuItems, allowedKeys, parentPath = '') {
       const result = [];
 
       for (const item of menuItems) {
-        const {key, label, icon, children} = item;
+        const {key, label, icon, children, no_permission = false} = item
 
-        // 如果是叶子节点（无 children），检查权限
-        if (!children || children.length === 0) {
-          if (allowedKeys.has(key) || allowedKeys.has('*')) {
-            const iconVNode = h(icon);
-            result.push(this.getItem(label, key, iconVNode));
+        if (no_permission) {
+          // 有 no_permission 标识的菜单不参与权限检查，直接添加
+          result.push(this.getItem(label, key, h(icon), children));
+          continue;
+        }
+
+        // 构建当前菜单的完整路径
+        const currentPath = parentPath ? `${parentPath}:${key}` : key;
+
+        // 检查当前菜单是否有权限
+        const hasPermission = this.checkPermission(currentPath, allowedKeys, children);
+
+        if (hasPermission) {
+          if (!children || children.length === 0) {
+            // 叶子节点，直接添加
+            result.push(this.getItem(label, key, h(icon)));
+          } else {
+            // 递归处理子菜单
+            const filteredChildren = this.filterMenuByPermission(children, allowedKeys, currentPath);
+
+            // 只有当子菜单中有权限项时才添加父菜单
+            if (filteredChildren.length > 0) {
+              result.push(this.getItem(label, key, h(icon), filteredChildren));
+            } else {
+              // 检查是否父菜单有通配符权限，这种情况下也应该显示父菜单
+              if (allowedKeys.has(`${currentPath}:*`)) {
+                result.push(this.getItem(label, key, h(icon), filteredChildren));
+              }
+            }
           }
-        } else {
-          // 有子菜单：先递归过滤子项
-          const filteredChildren = this.filterMenuByPermission(children, allowedKeys);
-
-          // 只有当子菜单非空时，才保留父菜单
+        } else if (children && children.length > 0) {
+          // 当前菜单无权限，但子菜单可能有权限，仍需检查子菜单
+          const filteredChildren = this.filterMenuByPermission(children, allowedKeys, currentPath);
           if (filteredChildren.length > 0) {
-            const iconVNode = h(icon);
-            result.push(this.getItem(label, key, iconVNode, filteredChildren));
+            // 如果子菜单有权限，则父菜单也需要显示以便访问子菜单
+            result.push(this.getItem(label, key, h(icon), filteredChildren));
           }
-          // 否则：子项全无权限，父菜单也不显示
         }
       }
 
-      return result
+      return result;
+    },
+
+    // 权限检查逻辑
+    checkPermission(currentPath, allowedKeys, children) {
+      // 检查是否有通配符权限
+      if (allowedKeys.has('*')) {
+        return true;
+      }
+
+      // 检查是否有直接权限
+      if (allowedKeys.has(currentPath)) {
+        return true;
+      }
+
+      // 检查通配符权限 (例如 'Prod:*')
+      const wildcardKey = `${currentPath}:*`;
+      if (allowedKeys.has(wildcardKey)) {
+        return true;
+      }
+
+      // 如果是叶子节点，检查是否存在以当前路径为前缀的权限
+      if (!children || children.length === 0) {
+        for (const perm of allowedKeys) {
+          if (perm.startsWith(currentPath + ':') || perm === currentPath) {
+            return true;
+          }
+        }
+      }
+
+      return false;
     },
 
     // 提取所有根级 submenu 的 key（用于 onOpenChange 控制单开）
@@ -185,7 +241,7 @@ export default {
           break;
         default:
           if (this.$router.hasRoute(key)) {
-            this.$router.push({ name: key });
+            this.$router.push({name: key});
           } else {
             this.$message.error(`路由 ${key} 不存在`);
           }
@@ -193,7 +249,7 @@ export default {
     },
   },
   created() {
-    // 页面加载时尝试读取“记住我”的用户名
+    // 页面加载时尝试读取"记住我"的用户名
     const currentUser = JSON.parse(localStorage.getItem('user'));
     if (currentUser) {
       this.currentUser = currentUser
@@ -220,5 +276,4 @@ export default {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   margin-bottom: 8px;
 }
-
 </style>

@@ -10,7 +10,8 @@
       <!-- 列插槽：自定义操作列 -->
       <template #action="{ record }">
         <a-space size="small">
-          <a-button type="link" size="small" @click="showDetail(record)">详情</a-button>
+          <a-button type="link" size="small" @click="showRole(record)">权限</a-button>
+          <!-- <a-button type="link" size="small" @click="showMember(record)">成员</a-button>-->
           <a-button v-if="record.is_system !== 1" type="link" size="small" @click="showEditForm(record)">编辑</a-button>
           <a-button v-if="record.is_system !== 1" type="link" size="small" danger @click="handleDelete(record)">删除
           </a-button>
@@ -30,15 +31,31 @@
       </template>
     </GenericTable>
 
-    <!-- 详情抽屉 -->
-    <DrawerDesc
-        v-model:open="detailDrawerOpen"
-        :title="`角色详情 - ${currentEditRecord?.rname}`"
-        :form-items="formItemsForDrawer"
-        :record="currentEditRecord"
-        @cancel="handleCancelDetail"
-        v-if="currentEditRecord"
+    <!-- 角色权限对话框 -->
+    <ModalTrans
+        v-model:open="RoleModalopen"
+        :loading="loading"
+        :target-keys="RoleTargetKeys"
+        :selected-keys="RoleSelectedKeys"
+        :data-source="RoleOptions"
+        :submitting="saving"
+        show-title="name"
+        :modal-title="currentEditRecord?.rname+' 权限'"
+        @submit="onRoleSubmit"
+        @cancel="onRoleCancel"
     />
+
+    <!-- 角色成员对话框 -->
+    <!--    <ModalTrans-->
+    <!--        v-model:open="MemberModalopen"-->
+    <!--        :target-keys="MemberTargetKeys"-->
+    <!--        :selected-keys="MemberSelectedKeys"-->
+    <!--        :data-source="MemberOptions"-->
+    <!--        :submitting="saving"-->
+    <!--        show-title="name"-->
+    <!--        :modal-title="currentEditRecord?.rname+' 成员'"-->
+    <!--        @submit="onMemberSubmit"-->
+    <!--    />-->
 
     <!-- 编辑/新增抽屉表单 -->
     <DrawerForm
@@ -54,20 +71,19 @@
 </template>
 
 <script>
-import GenericTable from '@/components/table/GenericTable';
+import GenericTable from '@/components/table/GenericTable.vue';
 import DrawerForm from '@/components/form/DrawerForm.vue';
-import DrawerDesc from '@/components/descriptions/DrawerDesc.vue';
 
 import {noSpecialChars, stringLength} from "@/utils/formValidators";
+import ModalTrans from "@/components/transfer/ModalTrans.vue";
 
 export default {
   name: "RoleList",
-  components: {GenericTable, DrawerForm, DrawerDesc},
+  components: {ModalTrans, GenericTable, DrawerForm},
   data() {
     return {
       loading: false,
       tableData: [],
-      detailDrawerOpen: false,
       formDrawerOpen: false,
       currentEditRecord: null, // null 表示新增，非 null 表示编辑
       saving: false,
@@ -98,6 +114,16 @@ export default {
           fixed: 'right'
         }
       ],
+
+      RoleModalopen: false,
+      RoleTargetKeys: [],
+      RoleSelectedKeys: [],
+      RoleOptions: [],
+
+      // MemberModalopen: false,
+      // MemberTargetKeys: [],
+      // MemberSelectedKeys: [],
+      // MemberOptions: [],
     }
   },
   computed: {
@@ -136,16 +162,86 @@ export default {
         this.tableData = response.data;
       } catch (error) {
         console.error('refreshData failed:', error);
-        this.$message.error('数据加载失败');
+        this.$message.error('角色数据加载失败');
       } finally {
         this.loading = false;
       }
     },
 
-    showDetail(record) {
-      this.currentEditRecord = {...record};
-      this.detailDrawerOpen = true;
+    async refreshRoleData() {
+      try {
+        const response = await this.$api.post('PermissionQuery');
+        this.RoleOptions = response.data.map(i => ({...i, key: String(i.id)}))
+      } catch (error) {
+        console.error('refreshRoleData failed:', error);
+        this.$message.error('权限数据加载失败');
+      }
     },
+
+    async showRole(record) {
+      this.loading = true;
+      this.RoleModalopen = true;
+      try {
+        this.currentEditRecord = {...record};
+        const response = await this.$api.post('RolePermissionQuery', {'role_id': record.rid});
+        this.RoleTargetKeys = response.data?.map(i => String(i.id));
+        console.log(this.RoleTargetKeys)
+      } catch (error) {
+        console.error('showRole failed:', error);
+        this.$message.error('角色权限数据加载失败');
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async onRoleSubmit({addKeys, removeKeys}) {
+      this.saving = true
+      try {
+        if (addKeys)
+          await this.$api.post('RolePermissionAdd', {
+            role_id: this.currentEditRecord.rid,
+            permission_id_list: addKeys
+          })
+
+        if (removeKeys)
+          await this.$api.post('RolePermissionDelete', {
+            role_id: this.currentEditRecord.rid,
+            permission_id_list: removeKeys
+          })
+
+        this.RoleModalopen = false
+        this.$message.success('权限调整成功');
+      } catch (error) {
+        console.error('权限调整失败', error);
+        this.$message.error('权限调整失败');
+      } finally {
+        this.saving = false
+      }
+    },
+
+    onRoleCancel() {
+      this.RoleModalopen = false;
+      this.currentEditRecord = null;
+      this.RoleTargetKeys = [];
+    },
+
+    // showMember(record) {
+    //   this.currentEditRecord = {...record};
+    //   this.MemberModalopen = true;
+    // },
+
+    // onMemberSubmit({targetKeys}) {
+    //   this.saving = true
+    //   try {
+    //     console.log('子组件 emit 提交:', targetKeys)
+    //     this.MemberModalopen = false
+    //   } catch (e) {
+    //     console.log(e)
+    //   } finally {
+    //     this.saving = false
+    //   }
+    // },
+
 
     showEditForm(record) {
       this.currentEditRecord = {...record};
@@ -157,10 +253,6 @@ export default {
       this.formDrawerOpen = true;
     },
 
-    handleParse(parseRes) {
-      console.log(parseRes.data.data)
-      this.handleFormSubmit(parseRes.data.data)
-    },
 
     async handleFormSubmit(formData) {
       const isAdd = this.isAddMode;
@@ -211,14 +303,10 @@ export default {
         },
       });
     },
-
-    handleCancelDetail() {
-      this.detailDrawerOpen = false;
-      this.currentEditRecord = null;
-    }
   },
   created() {
     this.refreshData();
+    this.refreshRoleData()
   }
 }
 </script>

@@ -104,32 +104,33 @@ export default {
         // await new Promise(resolve => setTimeout(resolve, 1000));
 
         // 实际请求示例：
-        await this.$api.post('UserLogin', {
+        const userlogin = await this.$api.post('UserLogin', {
           name: this.formState.username,
           passwd: this.formState.password,
-        }).then(response => {
-          if (!response.user || !response.token) {
-            this.$message.error(response.msg);
-          } else {
-            localStorage.setItem('token', response.token);
-            localStorage.setItem('user', JSON.stringify(response.user));
-
-            this.$message.success('登录成功！');
-            this.$router.push({name: 'Home'});
-          }
         })
 
-        // 处理“记住我”
-        if (this.rememberMe) {
-          localStorage.setItem('login_username', this.formState.username);
+        if (!userlogin.user || !userlogin.token) {
+          this.$message.error(userlogin.msg);
         } else {
-          localStorage.removeItem('login_username');
+          localStorage.setItem('token', userlogin.token);
+          localStorage.setItem('user', JSON.stringify(userlogin.user));
+
+          // 处理“记住我”
+          if (this.rememberMe) {
+            localStorage.setItem('login_username', this.formState.username);
+          } else {
+            localStorage.removeItem('login_username');
+          }
+
+          // 获取登录用户详细权限用于后续控制
+          const role_permission = await this.$api.post('RolePermissionQuery', {'role_id': userlogin.user.rid})
+          localStorage.setItem('role_permission', JSON.stringify(role_permission.data))
+
+          this.$message.success('登录成功！');
+          this.$router.push({name: 'Home'});
         }
       } catch (error) {
-        // 表单验证错误
-        if (error?.errorFields) {
-          return;
-        }
+        console.log(error)
       } finally {
         this.loading = false;
       }

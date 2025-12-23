@@ -1,66 +1,52 @@
-<!-- GenericTrans.vue -->
 <template>
-  <a-transfer
-      :target-keys="curTargetKeys"
-      :selected-keys="curSelectedKeys"
-      :data-source="dataSource"
-      :titles="titles"
-      :render="getTitle"
-      :operations="operations"
-      show-search
-      :locale="locale"
-      :list-style="listStyle"
-      @change="handleChange"
-      @selectChange="handleSelectChange"
-  >
-    <!-- 透传 footer 插槽 -->
-    <template #footer="{ direction }" v-if="$slots.footer">
-      <slot name="footer" :direction="direction"/>
-    </template>
-  </a-transfer>
+  <a-spin :spinning="loading" size="large" tip="加载中...">
+    <a-transfer
+        :target-keys="internalTargetKeys"
+        :selected-keys="internalSelectedKeys"
+        :data-source="dataSource"
+        :titles="titles"
+        :render="getTitle"
+        :operations="operations"
+        show-search
+        :locale="locale"
+        :list-style="listStyle"
+        @change="handleChange"
+        @selectChange="handleSelectChange"
+    >
+      <!-- 透传 footer 插槽 -->
+      <template #footer="{ direction }">
+        <div v-if="direction === 'right'" class="transfer-footer">
+          <a-button size="small" :disabled="isDisable" @click="handleCancel">重置</a-button>
+          <a-button size="small" :disabled="isDisable" type="primary"
+                    @click="handleSubmit" style="margin-left: 8px;" :loading="submitting">
+            保存
+          </a-button>
+        </div>
+      </template>
+    </a-transfer>
+  </a-spin>
 </template>
 
 <script>
 export default {
   name: 'GenericTrans',
   props: {
-    targetKeys: {
-      type: Array,
-      default: () => [],
-    },
-    selectedKeys: {
-      type: Array,
-      default: () => [],
-    },
-    dataSource: {
-      type: Array,
-      required: true,
-      default: () => [],
-    },
-    showTitle: {
-      type: String,
-      default: 'title',
-    },
-    titles: {
-      type: Array,
-      default: () => ['可选', '已选'],
-    },
-    operations: {
-      type: Array,
-      default: () => ['添加', '删除'],
-    },
-    listStyle: {
-      type: Object,
-      default: () => ({
-        width: '320px',
-        height: '420px',
-      }),
-    },
+    loading: {type: Boolean, default: false},
+    targetKeys: {type: Array[Object], default: () => [],},
+    selectedKeys: {type: Array[Object], default: () => [],},
+    dataSource: {type: Array[Object], required: true, default: () => [],},
+    showTitle: {type: String, default: 'title',},
+    titles: {type: Array, default: () => ['可选', '已选'],},
+    operations: {type: Array, default: () => ['添加', '删除'],},
+    listStyle: {type: Object, default: () => ({width: '300px', height: '400px',}),},
+    submitting: {type: Boolean, default: false},
   },
+  emits: ['submit', 'reset'],
   data() {
     return {
-      internalTargetKeys: [],
-      internalSelectedKeys: [],
+      isDisable: true,
+      internalTargetKeys: [...this.targetKeys],
+      internalSelectedKeys: [...this.selectedKeys],
       locale: {
         selectAll: '全选',
         selectInvert: '反选',
@@ -71,73 +57,99 @@ export default {
       },
     };
   },
-  computed: {
-    curTargetKeys: {
-      get() {
-        return this.targetKeys?.length >= 0 ? this.targetKeys : this.internalTargetKeys;
-      },
-      set(val) {
-        this.internalTargetKeys = val;
-      },
-    },
-    curSelectedKeys: {
-      get() {
-        return this.selectedKeys?.length >= 0 ? this.selectedKeys : this.internalSelectedKeys;
-      },
-      set(val) {
-        this.internalSelectedKeys = val;
-      },
-    },
-  },
   methods: {
     getTitle(item) {
-      return item[this.showTitle] || item.title || item.key || '';
+      if (typeof item === 'string') {
+        return item;
+      }
+      return (
+          (item && typeof item === 'object' && item[this.showTitle]) ||
+          item.title ||
+          item.key ||
+          ''
+      );
     },
 
     handleChange(targetKeys) {
-      this.curTargetKeys = targetKeys;
-      this.$emit('update:targetKeys', targetKeys);
+      this.isDisable = false
+      this.internalTargetKeys = targetKeys;
     },
 
     handleSelectChange(sourceSelectedKeys, targetSelectedKeys) {
-      const newSelectedKeys = [...sourceSelectedKeys, ...targetSelectedKeys];
-      this.curSelectedKeys = newSelectedKeys;
-      this.$emit('update:selectedKeys', newSelectedKeys);
-      this.$emit('selectChange', sourceSelectedKeys, targetSelectedKeys);
+      this.internalSelectedKeys = [...sourceSelectedKeys, ...targetSelectedKeys];
     },
 
-    // 暴露给父组件的方法（通过 ref 调用）
     handleSubmit() {
-      this.$emit('submit', {targetKeys: this.curTargetKeys});
+      const addKeys = this.internalTargetKeys.filter(key => !this.targetKeys.includes(key));
+      const removeKeys = this.targetKeys.filter(key => !this.internalTargetKeys.includes(key));
+
+      this.$emit('submit', {
+        targetKeys: this.internalTargetKeys,
+        selectedKeys: this.internalSelectedKeys,
+        addKeys,
+        removeKeys
+      });
     },
 
     handleCancel() {
+      this.isDisable = true
       // 重置为初始 props 值
-      this.curTargetKeys = [...(this.targetKeys || [])];
-      this.curSelectedKeys = [...(this.selectedKeys || [])];
-      this.$emit('update:targetKeys', this.curTargetKeys);
-      this.$emit('update:selectedKeys', this.curSelectedKeys);
+      this.internalTargetKeys = [...this.targetKeys];
+      this.internalSelectedKeys = [...this.selectedKeys];
       this.$emit('reset');
     },
+  },
+  watch: {
+    targetKeys: {
+      handler(newVal) {
+        this.internalTargetKeys = [...newVal];
+        this.isDisable = true;
+      },
+      immediate: true
+    },
+    selectedKeys: {
+      handler(newVal) {
+        this.internalSelectedKeys = [...newVal];
+      },
+      immediate: true
+    }
   },
 };
 </script>
 
 <style scoped>
+.transfer-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 6px 12px 0;
+  gap: 8px;
+}
 
 :deep(.ant-transfer-list) {
   border-radius: 6px;
   border: 1px solid #d9d9d9;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);
 }
 
 :deep(.ant-transfer-list-header) {
   padding: 8px 12px;
   font-weight: 600;
   background-color: #fafafa;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 :deep(.ant-transfer-list-content-item) {
   padding: 6px 12px;
   font-size: 14px;
+  line-height: 1.5;
+}
+
+:deep(.ant-transfer-list-content-item):focus-visible {
+  outline: 2px solid #1890ff;
+  outline-offset: -2px;
+}
+
+:deep(.ant-transfer-list-body-search-wrapper .ant-input-affix-wrapper) {
+  padding: 4px 11px;
 }
 </style>

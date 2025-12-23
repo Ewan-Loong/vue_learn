@@ -52,7 +52,7 @@ apiClient.interceptors.response.use(
         } else if (status === 400) {
             errorMsg = data?.message || data?.msg || '请求参数错误';
         } else if (status === 403) {
-            errorMsg = '无权限访问';
+            errorMsg = data?.message || data?.msg || '无权限访问';
         } else if (status === 404) {
             errorMsg = '接口不存在';
         } else if (status === 500) {
