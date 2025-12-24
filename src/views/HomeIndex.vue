@@ -117,9 +117,8 @@ export default {
 }
 
 .contentStyle {
-  display: flex;
-  flex-direction: column;
-  height: 80vh;
+  flex: 1;
+  overflow: auto;
   padding: 2px;
   box-sizing: border-box;
 }

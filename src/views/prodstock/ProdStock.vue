@@ -36,7 +36,16 @@
         :title="`库存详情`"
         :width="1000"
         @cancel="handleFormCancel"
-    />
+    >
+      <!-- 标签列插槽 -->
+      <template #op_type="{ value }">
+        <a-tag
+            :key="value"
+            color="blue"
+        > {{ value === 1 ? '入库' : '出库' }}
+        </a-tag>
+      </template>
+    </ModalTable>
 
     <!-- 编辑/新增抽屉表单 -->
     <DrawerForm
@@ -84,7 +93,7 @@ export default {
         {title: '产品名称', dataIndex: 'pname', key: 'pname', showInAdd: false, showInEdit: false},
         {
           title: '操作类型', dataIndex: 'op_type', key: 'op_type', type: 'radio', required: true,
-          options: [{label: '出库', value: 2}, {label: '入库', value: 1}],
+          options: [{label: '出库', value: 2}, {label: '入库', value: 1}], slotName: 'op_type'
         },
         {title: '操作用户ID', dataIndex: 'op_uid', key: 'op_uid', showInAdd: false, showInEdit: false},
         {title: '操作数量', dataIndex: 'op_num', key: 'op_num', type: 'number', rules: [numberRange({min: 1})]},
