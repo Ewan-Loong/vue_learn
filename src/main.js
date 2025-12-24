@@ -2,9 +2,9 @@ import {createApp} from 'vue'
 import App from './App.vue'
 import api from "@/plugins/api";
 import router from "@/routes";
-import {message} from 'ant-design-vue';
-import Antd from 'ant-design-vue';
+import Antd, {message} from 'ant-design-vue';
 import 'ant-design-vue/dist/reset.css';
+import "echarts"
 
 const app = createApp(App)
 

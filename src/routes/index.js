@@ -27,7 +27,7 @@ export const rootRouter = {
     redirect: '/Home/Index',
     component: () => import('@/views/HomeIndex.vue'),
     children: [
-        {name: 'Index', path: 'Index', component: () => import('@/views/temp.vue')},
+        {name: 'Index', path: 'Index', component: () => import('@/views/system/HomePage.vue')},
         {name: 'SystemList', path: 'SystemList', component: () => import('@/views/system/SystemList.vue')},
         {name: 'RoleList', path: 'RoleList', component: () => import('@/views/system/RoleList.vue')},
         {name: 'PermissionList', path: 'PermissionList', component: () => import('@/views/system/PermissionList.vue')},

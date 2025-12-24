@@ -1,11 +1,10 @@
-<!-- PermissionMenu.vue -->
 <template>
   <div class="menubar-main">
     <div class="user-info">
       <a-avatar size="large" :style="{ backgroundColor: '#1d83ff', verticalAlign: 'middle',margin: '0 16px'}" :gap="2">
         {{ currentUser.name }}
       </a-avatar>
-      <a-tag color="blue">
+      <a-tag v-if="!collapsed" color="blue">
         {{ currentUser.rname + '(' + currentUser.rcode + ')' }}
       </a-tag>
     </div>
@@ -92,6 +91,9 @@ export default {
         },
       ],
     };
+  },
+  props: {
+    collapsed: {type: Boolean, default: false}
   },
   async mounted() {
     // 模拟：从 store / API / props 获取当前用户权限
@@ -207,8 +209,12 @@ export default {
       // 如果是叶子节点，检查是否存在以当前路径为前缀的权限
       if (!children || children.length === 0) {
         for (const perm of allowedKeys) {
-          if (perm.startsWith(currentPath + ':') || perm === currentPath) {
-            return true;
+          // 1. 直接匹配
+          if (perm === currentPath) return true;
+          // 2. 匹配通配符
+          if (perm.endsWith(':*')) {
+            const prefix = perm.substring(0, perm.length - 2); // 去掉 :*
+            if (currentPath.startsWith(prefix + ':')) return true;
           }
         }
       }
@@ -237,6 +243,9 @@ export default {
         case 'Logout':
           await this.$api.post('UserLogout', {uid: this.currentUser.uid, name: this.currentUser.name})
           this.$router.push({name: 'Login'})
+          localStorage.removeItem('role_permission')
+          localStorage.removeItem('token')
+          localStorage.removeItem('user')
           this.$message.success('登出成功！');
           break;
         default:

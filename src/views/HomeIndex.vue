@@ -3,7 +3,7 @@
     <!-- 上1中2下1布局 三段各占1行 -->
     <a-layout style="height: 100vh;">
       <a-layout-sider class="siderStyle" v-model:collapsed="collapsed">
-        <MenuBar/>
+        <MenuBar :collapsed="collapsed"/>
       </a-layout-sider>
 
       <a-layout>
